@@ -299,34 +299,80 @@ public FlightOrder createOrder(List<String> passengerNames, List<ScheduledFlight
 }
 ```
 
+Additionally, `ScheduledFlight` objects are created with multiple constructors and lack a clear, flexible construction pattern. They require several parameters and optional fields that need to be set after instantiation:
+
+```java
+// Current approach - unclear initialization
+ScheduledFlight flight = new ScheduledFlight(number, departure, arrival, aircraft, departureTime);
+flight.setCurrentPrice(200.0);
+// Other properties set separately
+```
+
 **Issues:**
 - Multiple setter calls required after object creation
 - Creation logic is scattered across classes
 - No clear sequence for complex object construction
 - Difficult to create orders with different configurations
 - Validation is spread across different classes
+- ScheduledFlight initialization lacks flexibility
 - Fluent interface would be more intuitive
+- Optional parameters (like currentPrice) have no default handling during construction
 
 ### Design Pattern Application: Builder Pattern
 
-The Builder Pattern separates order construction from its representation, making complex object creation clearer and more flexible.
+The Builder Pattern separates complex object construction from its representation, making object creation clearer and more flexible. This pattern is applied to the `ScheduledFlight` class as a static nested builder within the class itself.
+
+#### Implementation Approach:
+
+1. **Private Constructor in ScheduledFlight**: A private constructor that accepts a Builder object, preventing direct instantiation and ensuring objects are created only through the builder.
+
+2. **Static Nested Builder Class**: A builder class nested within `ScheduledFlight` that provides a fluent interface for constructing `ScheduledFlight` objects.
+
+3. **Builder Fields**: Duplicate fields for all `ScheduledFlight` parameters in the builder class.
+
+4. **Setter Methods**: Fluent setter methods in the builder that return the builder itself, enabling method chaining.
+
+5. **Build Method**: The `build()` method that validates all required parameters and constructs the final `ScheduledFlight` instance.
 
 #### Benefits:
-1. **Clearer Syntax**: Fluent interface for building orders
-2. **Validation Centralization**: All validation happens during construction
-3. **Immutability Support**: Can make Order immutable after building
-4. **Multiple Configurations**: Different order types can be built flexibly
-5. **Reduced Setter Calls**: No need for multiple setters
-6. **Better Readability**: Code intention is clearer
+1. **Clearer Syntax**: Fluent interface for building scheduled flights with method chaining
+2. **Flexible Construction**: Required parameters can be distinguished from optional ones
+3. **Encapsulation**: Private constructor prevents direct instantiation
+4. **Validation Centralization**: All validation happens in the `build()` method
+5. **Improved Readability**: Intent is clear from chained method calls
+6. **Optional Parameters**: Handles optional fields (like `currentPrice`) elegantly
+7. **Single Responsibility**: Builder handles construction logic, ScheduledFlight handles behavior
 
 #### Drawbacks:
-1. Increased number of classes
-2. More code verbosity initially
-3. Memory overhead for builder object
+1. Increased number of classes (nested builder)
+2. More code lines (builder methods and fields)
+3. Slight memory overhead during construction
+4. Learning curve for unfamiliar developers
 
 ### Class Diagram: Before Builder Pattern
 
 ```
+┌──────────────────────────────────────────────────┐
+│         ScheduledFlight                          │
+├──────────────────────────────────────────────────┤
+│ - passengers: List<Passenger>                    │
+│ - departureTime: Date                            │
+│ - currentPrice: double = 100                     │
+├──────────────────────────────────────────────────┤
+│ + ScheduledFlight(int, Airport, Airport,         │
+│     Object, Date)  ← Required constructor        │
+│ + ScheduledFlight(int, Airport, Airport,         │
+│     Object, Date, double)  ← Overloaded          │
+│ + setCurrentPrice(double): void                  │
+│                                                  │
+│ PROBLEMS:                                        │
+│ ❌ Multiple constructors for variations          │
+│ ❌ Optional fields set after instantiation       │
+│ ❌ No clear initialization sequence              │
+│ ❌ Inherits from Flight (complex parent)         │
+│ ❌ Hard to add new optional parameters           │
+└──────────────────────────────────────────────────┘
+
 ┌──────────────────────────────────────┐
 │           Customer                   │
 ├──────────────────────────────────────┤
@@ -354,69 +400,191 @@ The Builder Pattern separates order construction from its representation, making
 │ + setPassengers(List): void          │
 │ + getScheduledFlights(): List        │
 └──────────────────────────────────────┘
-
-┌──────────────────────────────────────┐
-│        ScheduledFlight               │
-├──────────────────────────────────────┤
-│ + addPassengers(List): void          │
-└──────────────────────────────────────┘
 ```
 
 ### Class Diagram: After Builder Pattern
 
 ```
-┌──────────────────────────────────────┐
-│         Customer                     │
-├──────────────────────────────────────┤
-│ - name: String                       │
-│ - email: String                      │
-│ - orders: List<Order>                │
-├──────────────────────────────────────┤
-│ + createOrderBuilder(): OrderBuilder │
-│ - isOrderValid(...): boolean         │
-└──────────────────────────────────────┘
-         │ creates builder
-         │
-         ▼
-┌──────────────────────────────────────────────┐
-│              OrderBuilder                    │
-├──────────────────────────────────────────────┤
-│ - flights: List<ScheduledFlight>             │
-│ - passengerNames: List<String>               │
-│ - price: double                              │
-│ - customer: Customer                         │
-├──────────────────────────────────────────────┤
-│ + withFlights(List): OrderBuilder            │
-│ + withPassengers(List): OrderBuilder         │
-│ + withPrice(double): OrderBuilder            │
-│ + withCustomer(Customer): OrderBuilder       │
-│ + build(): FlightOrder                       │
-│ - validate(): void                           │
-│ - createPassengers(): List<Passenger>        │
-│ - registerWithScheduledFlights(): void       │
-└──────────────────────────────────────────────┘
-         │ builds
-         │
-         ▼
-┌──────────────────────────────────────┐
-│         FlightOrder                  │
-├──────────────────────────────────────┤
-│ - flights: List<ScheduledFlight>     │
-│ - customer: Customer                 │
-│ - passengers: List<Passenger>        │
-│ - price: double                      │
-│ - isClosed: boolean                  │
-├──────────────────────────────────────┤
-│ [All set during construction]         │
-│ No direct setters needed              │
-└──────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│             ScheduledFlight                            │
+│         (with nested Builder)                          │
+├────────────────────────────────────────────────────────┤
+│ PRIVATE CONSTRUCTOR:                                   │
+│ - ScheduledFlight(Builder builder)                     │
+│   └─ Accepts builder and initializes from it           │
+│                                                        │
+│ PUBLIC METHODS:                                        │
+│ + getPassengers(): List<Passenger>                     │
+│ + addPassengers(List): void                            │
+│ + setCurrentPrice(double): void                        │
+│ + getDepartureTime(): Date                             │
+│ + getCurrentPrice(): double                            │
+│ ... other inherited methods ...                        │
+│                                                        │
+├────────────────────────────────────────────────────────┤
+│                    NESTED CLASS                        │
+│                  << inner static >>                    │
+│                  Builder                               │
+│  ┌────────────────────────────────────────────────┐   │
+│  │ BUILDER FIELDS:                                │   │
+│  │ - number: int                                  │   │
+│  │ - departure: Airport                           │   │
+│  │ - arrival: Airport                             │   │
+│  │ - aircraft: Object                             │   │
+│  │ - departureTime: Date                          │   │
+│  │ - passengers: List<Passenger>  (optional)     │   │
+│  │ - currentPrice: double  (optional)             │   │
+│  │                                                │   │
+│  │ BUILDER METHODS:                               │   │
+│  │ + withNumber(int): Builder                     │   │
+│  │ + withDeparture(Airport): Builder              │   │
+│  │ + withArrival(Airport): Builder                │   │
+│  │ + withAircraft(Object): Builder                │   │
+│  │ + withDepartureTime(Date): Builder             │   │
+│  │ + withPassengers(List): Builder                │   │
+│  │ + withCurrentPrice(double): Builder            │   │
+│  │ + build(): ScheduledFlight                     │   │
+│  │   └─ Validates parameters                      │   │
+│  │   └─ Returns new ScheduledFlight(this)         │   │
+│  │                                                │   │
+│  │ VALIDATION LOGIC:                              │   │
+│  │ - Ensures required fields are set              │   │
+│  │ - Validates airport and aircraft               │   │
+│  │ - Sets default values for optional fields      │   │
+│  └────────────────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────┘
+
+USAGE PATTERN:
+
+// Before: Scattered initialization
+Flight flight = new Flight(1, jfk, berlin, helicopter);
+ScheduledFlight scheduled = new ScheduledFlight(
+    1, jfk, berlin, helicopter, departureDate
+);
+scheduled.setCurrentPrice(250.0);
+scheduled.addPassengers(passengers);
+
+// After: Fluent builder pattern
+ScheduledFlight scheduled = new ScheduledFlight.Builder()
+    .withNumber(1)
+    .withDeparture(jfk)
+    .withArrival(berlin)
+    .withAircraft(helicopter)
+    .withDepartureTime(departureDate)
+    .withCurrentPrice(250.0)  // Optional
+    .withPassengers(passengers)  // Optional
+    .build();  // All validation happens here
+```
+
+### Implementation Details:
+
+**ScheduledFlight class structure:**
+
+```java
+public class ScheduledFlight extends Flight {
+    private final List<Passenger> passengers;
+    private final Date departureTime;
+    private double currentPrice;
+
+    // Private constructor - only accessible via Builder
+    private ScheduledFlight(Builder builder) {
+        super(builder.number, builder.departure, builder.arrival, builder.aircraft);
+        this.departureTime = builder.departureTime;
+        this.passengers = builder.passengers != null ? 
+                         builder.passengers : new ArrayList<>();
+        this.currentPrice = builder.currentPrice > 0 ? 
+                           builder.currentPrice : 100.0;  // Default price
+    }
+
+    // Static nested Builder class
+    public static class Builder {
+        // Required fields
+        private int number;
+        private Airport departure;
+        private Airport arrival;
+        private Object aircraft;
+        private Date departureTime;
+
+        // Optional fields
+        private List<Passenger> passengers;
+        private double currentPrice = 100.0;
+
+        // Fluent setter methods
+        public Builder withNumber(int number) {
+            this.number = number;
+            return this;
+        }
+
+        public Builder withDeparture(Airport departure) {
+            this.departure = departure;
+            return this;
+        }
+
+        public Builder withArrival(Airport arrival) {
+            this.arrival = arrival;
+            return this;
+        }
+
+        public Builder withAircraft(Object aircraft) {
+            this.aircraft = aircraft;
+            return this;
+        }
+
+        public Builder withDepartureTime(Date departureTime) {
+            this.departureTime = departureTime;
+            return this;
+        }
+
+        public Builder withPassengers(List<Passenger> passengers) {
+            this.passengers = passengers;
+            return this;
+        }
+
+        public Builder withCurrentPrice(double currentPrice) {
+            this.currentPrice = currentPrice;
+            return this;
+        }
+
+        // Build method with validation
+        public ScheduledFlight build() {
+            // Validate required fields
+            if (departure == null || arrival == null || 
+                aircraft == null || departureTime == null) {
+                throw new IllegalStateException(
+                    "Required fields (departure, arrival, aircraft, departureTime) must be set");
+            }
+            
+            // Validate aircraft compatibility with airports
+            new Flight(number, departure, arrival, aircraft);  // Will throw if invalid
+            
+            // Create and return the ScheduledFlight
+            return new ScheduledFlight(this);
+        }
+    }
+
+    // Other methods remain the same
+    public List<Passenger> getPassengers() { return passengers; }
+    public Date getDepartureTime() { return departureTime; }
+    public double getCurrentPrice() { return currentPrice; }
+    // ... etc
+}
 ```
 
 ### Implementation Impact:
-- Creates more intuitive syntax: `customer.createOrderBuilder().withFlights(...).withPassengers(...).withPrice(...).build()`
-- All validation happens in `build()` method
-- Reduces complexity of order creation
-- Makes order construction flexible and extensible
+- **Cleaner Syntax**: `new ScheduledFlight.Builder().with...().build()` is intuitive and readable
+- **All Validation in build()**: Ensures objects are always in valid state
+- **Flexible Construction**: Optional fields like `currentPrice` and `passengers` can be set or omitted
+- **No Setters After Creation**: Once built, the object is fully initialized
+- **Extensible**: Adding new optional fields only requires adding a new `with...()` method
+- **Single Responsibility**: Builder handles construction, ScheduledFlight handles behavior
+- **Reduces Constructor Overloading**: One builder replaces multiple constructors with different signatures
+
+### Benefits for the Codebase:
+- Eliminates the need for overloaded constructors
+- Makes the intent of object creation clear through method names
+- Centralizes validation logic in the `build()` method
+- Allows partial object construction with sensible defaults
+- Improves code maintainability when requirements change
 
 ---
 
