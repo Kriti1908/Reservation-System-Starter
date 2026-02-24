@@ -1,0 +1,111 @@
+@startuml Factory_Pattern_Before
+title Class Diagram - Before Factory Pattern
+
+' Flight class with scattered instanceof checks
+class Flight {
+  - number: int
+  - departure: Airport
+  - arrival: Airport
+  - aircraft: Object
+  __
+  + Flight(int, Airport, Airport, Object)
+  - checkValidity(): void
+  - isAircraftValid(Airport): boolean
+  + getAircraft(): Object
+  + getNumber(): int
+  + getDeparture(): Airport
+  + getArrival(): Airport
+  + toString(): String
+  ..
+  Note: isAircraftValid() contains
+  complex instanceof checks for:
+  - PassengerPlane
+  - Helicopter  
+  - PassengerDrone
+}
+
+' ScheduledFlight with instanceof checks
+class ScheduledFlight {
+  - passengers: List<Passenger>
+  - departureTime: Date
+  - currentPrice: double
+  __
+  + ScheduledFlight(int, Airport, Airport, Object, Date)
+  + getCrewMemberCapacity(): int throws NoSuchFieldException
+  + getCapacity(): int throws NoSuchFieldException
+  + getAvailableCapacity(): int throws NoSuchFieldException
+  + addPassengers(List<Passenger>): void
+  + removePassengers(List<Passenger>): void
+  ..
+  Note: getCapacity() and getCrewMemberCapacity()
+  use instanceof checks with exception handling
+}
+
+' Aircraft classes without common interface
+class PassengerPlane {
+  + model: String
+  + passengerCapacity: int
+  + crewCapacity: int
+  __
+  + PassengerPlane(String)
+  ..
+  Note: Public fields,
+  no interface implementation
+}
+
+class Helicopter {
+  - model: String
+  - passengerCapacity: int
+  __
+  + Helicopter(String)
+  + getModel(): String
+  + getPassengerCapacity(): int
+  ..
+  Note: Private fields with getters,
+  inconsistent with PassengerPlane
+}
+
+class PassengerDrone {
+  - model: String
+  __
+  + PassengerDrone(String)
+  ..
+  Note: Hardcoded model "HypaHype",
+  no capacity or crew methods
+}
+
+' Relationships
+ScheduledFlight --|> Flight
+Flight o-- PassengerPlane : uses instanceof
+Flight o-- Helicopter : uses instanceof
+Flight o-- PassengerDrone : uses instanceof
+ScheduledFlight ..> PassengerPlane : instanceof checks
+ScheduledFlight ..> Helicopter : instanceof checks
+ScheduledFlight ..> PassengerDrone : instanceof checks
+
+note right of Flight
+  Problems:
+  - Uses Object type for aircraft
+  - Complex instanceof logic in isAircraftValid()
+  - Cyclomatic complexity = 5
+  - Inconsistent model access
+end note
+
+note right of ScheduledFlight
+  Problems:
+  - Multiple instanceof checks
+  - NoSuchFieldException handling
+  - Cyclomatic complexity = 4
+  - Hardcoded capacity values
+  - Code duplication
+end note
+
+note bottom of PassengerPlane
+  No common interface
+  Inconsistent design:
+  - PassengerPlane: public fields
+  - Helicopter: private fields + getters
+  - PassengerDrone: hardcoded values
+end note
+
+@enduml

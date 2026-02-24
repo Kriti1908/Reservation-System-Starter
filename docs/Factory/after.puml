@@ -1,0 +1,97 @@
+@startuml Factory_Pattern_After
+
+skinparam classAttributeIconSize 0
+
+interface Aircraft {
+    + getModel(): String
+    + getPassengerCapacity(): int
+    + getCrewCapacity(): int
+}
+
+class PassengerPlane {
+    - model: String
+    - passengerCapacity: int
+    - crewCapacity: int
+    + PassengerPlane(model: String)
+    + getModel(): String
+    + getPassengerCapacity(): int
+    + getCrewCapacity(): int
+}
+
+class Helicopter {
+    - model: String
+    - passengerCapacity: int
+    + Helicopter(model: String)
+    + getModel(): String
+    + getPassengerCapacity(): int
+    + getCrewCapacity(): int
+}
+
+class PassengerDrone {
+    - model: String
+    + PassengerDrone(model: String)
+    + getModel(): String
+    + getPassengerCapacity(): int
+    + getCrewCapacity(): int
+}
+
+class AircraftFactory <<Factory>> {
+    + {static} createAircraft(model: String): Aircraft
+}
+
+class Flight {
+    - number: int
+    - departure: Airport
+    - arrival: Airport
+    # aircraft: Aircraft
+    + Flight(number: int, departure: Airport, arrival: Airport, aircraft: Aircraft)
+    - isAircraftValid(airport: Airport): boolean
+    + getAircraft(): Aircraft
+}
+
+class ScheduledFlight {
+    - passengers: List<Passenger>
+    - departureTime: Date
+    - currentPrice: double
+    + ScheduledFlight(number: int, departure: Airport, arrival: Airport, aircraft: Aircraft, departureTime: Date)
+    + getCapacity(): int
+    + getCrewMemberCapacity(): int
+    + getAvailableCapacity(): int
+}
+
+Aircraft <|.. PassengerPlane
+Aircraft <|.. Helicopter
+Aircraft <|.. PassengerDrone
+
+AircraftFactory ..> PassengerPlane : creates
+AircraftFactory ..> Helicopter : creates
+AircraftFactory ..> PassengerDrone : creates
+
+Flight o--> Aircraft : uses
+ScheduledFlight --|> Flight : extends
+
+
+note right of AircraftFactory
+Factory Pattern:
+- Centralized aircraft creation
+- Single point of instantiation
+- Returns Aircraft abstraction
+- Easy to extend with new types
+end note
+
+note left of Flight
+Improvements:
+- No instanceof checks
+- Uses Aircraft interface
+- Reduced cyclomatic complexity
+- Type-safe design
+end note
+
+note bottom of Aircraft
+Common Abstraction:
+- Defines shared contract
+- Enables polymorphism
+- Eliminates type checking logic
+end note
+
+@enduml
