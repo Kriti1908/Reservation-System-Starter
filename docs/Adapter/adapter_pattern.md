@@ -79,10 +79,7 @@ The Adapter Pattern fits because:
 
 ### 1) Target interface introduced (`AircraftAdapter`)
 ```java
-public interface AircraftAdapter {
-    String getModel();
-    int getPassengerCapacity();
-    int getCrewCapacity();
+public interface AircraftAdapter extends Aircraft {
     String getType();
 }
 ```
