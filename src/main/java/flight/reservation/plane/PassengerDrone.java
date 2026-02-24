@@ -10,4 +10,8 @@ public class PassengerDrone {
             throw new IllegalArgumentException(String.format("Model type '%s' is not recognized", model));
         }
     }
+
+    public String getModel() {
+        return model;
+    }
 }
