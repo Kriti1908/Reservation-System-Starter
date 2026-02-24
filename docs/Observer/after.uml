@@ -1,0 +1,113 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+interface FlightObserver {
+    + onPassengersAdded(ScheduledFlight, int): void
+    + onPassengersRemoved(ScheduledFlight, int): void
+    + onPriceChanged(ScheduledFlight, double, double): void
+    + onFlightCancelled(ScheduledFlight): void
+}
+
+interface OrderObserver {
+    + onOrderClosed(FlightOrder): void
+    + onOrderPriceChanged(FlightOrder, double, double): void
+    + onPassengersChanged(FlightOrder, List<Passenger>): void
+}
+
+class LoggingFlightObserver {
+    + onPassengersAdded(ScheduledFlight, int): void
+    + onPassengersRemoved(ScheduledFlight, int): void
+    + onPriceChanged(ScheduledFlight, double, double): void
+    + onFlightCancelled(ScheduledFlight): void
+}
+
+class AnalyticsFlightObserver {
+    + onPassengersAdded(ScheduledFlight, int): void
+    + onPassengersRemoved(ScheduledFlight, int): void
+    + onPriceChanged(ScheduledFlight, double, double): void
+    + onFlightCancelled(ScheduledFlight): void
+}
+
+class NotificationFlightObserver {
+    + onPassengersAdded(ScheduledFlight, int): void
+    + onPassengersRemoved(ScheduledFlight, int): void
+    + onPriceChanged(ScheduledFlight, double, double): void
+    + onFlightCancelled(ScheduledFlight): void
+}
+
+class LoggingOrderObserver {
+    + onOrderClosed(FlightOrder): void
+    + onOrderPriceChanged(FlightOrder, double, double): void
+    + onPassengersChanged(FlightOrder, List<Passenger>): void
+}
+
+class ScheduledFlight {
+    - passengers: List<Passenger>
+    - currentPrice: double
+    - departureTime: Date
+    - observers: List<FlightObserver>
+    --
+    + addObserver(FlightObserver): void
+    + removeObserver(FlightObserver): void
+    + addPassengers(List<Passenger>): void
+    + removePassengers(List<Passenger>): void
+    + setCurrentPrice(double): void
+    + cancelFlight(): void
+    + getCapacity(): int
+    + getAvailableCapacity(): int
+    - notifyPassengersAdded(int): void
+    - notifyPassengersRemoved(int): void
+    - notifyPriceChanged(double, double): void
+    - notifyFlightCancelled(): void
+}
+
+class FlightOrder {
+    - isClosed: boolean
+    - scheduledFlights: List<ScheduledFlight>
+    - passengers: List<Passenger>
+    - price: double
+    - observers: List<OrderObserver>
+    --
+    + addObserver(OrderObserver): void
+    + removeObserver(OrderObserver): void
+    + setClosed(): void
+    + setPrice(double): void
+    + setPassengers(List<Passenger>): void
+    - notifyOrderClosed(): void
+    - notifyPriceChanged(double, double): void
+    - notifyPassengersChanged(): void
+}
+
+class Customer {
+    - name: String
+    - email: String
+    - orders: List<Order>
+    --
+    + createOrder(List<String>, List<ScheduledFlight>, double): FlightOrder
+}
+
+class Passenger {
+    - name: String
+    --
+    + getName(): String
+}
+
+FlightObserver <|.. LoggingFlightObserver : implements
+FlightObserver <|.. AnalyticsFlightObserver : implements
+FlightObserver <|.. NotificationFlightObserver : implements
+
+OrderObserver <|.. LoggingOrderObserver : implements
+
+ScheduledFlight o-- FlightObserver : notifies
+FlightOrder o-- OrderObserver : notifies
+
+Customer --> FlightOrder : creates
+FlightOrder --> ScheduledFlight : contains
+FlightOrder --> Passenger : contains
+ScheduledFlight --> Passenger : carries
+@enduml

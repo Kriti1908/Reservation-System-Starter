@@ -28,11 +28,13 @@ public class Customer {
         order.setCustomer(this);
         order.setPrice(price);
         List<Passenger> passengers = passengerNames
-                .stream()
-                .map(Passenger::new)
-                .collect(Collectors.toList());
+            .stream()
+            .map(Passenger::new)
+            .collect(Collectors.toList());
         order.setPassengers(passengers);
-        order.getScheduledFlights().forEach(scheduledFlight -> scheduledFlight.addPassengers(passengers));
+        for (ScheduledFlight scheduledFlight : order.getScheduledFlights()) {
+            scheduledFlight.addPassengers(passengers);
+        }
         orders.add(order);
         return order;
     }
@@ -41,7 +43,7 @@ public class Customer {
         boolean valid = true;
         valid = valid && !FlightOrder.getNoFlyList().contains(this.getName());
         valid = valid && passengerNames.stream().noneMatch(passenger -> FlightOrder.getNoFlyList().contains(passenger));
-        valid = valid && flights.stream().allMatch(scheduledFlight -> 
+        valid = valid && flights.stream().allMatch(scheduledFlight ->
             scheduledFlight.getAvailableCapacity() >= passengerNames.size()
         );
         return valid;
@@ -70,5 +72,4 @@ public class Customer {
     public void setOrders(List<Order> orders) {
         this.orders = orders;
     }
-
 }

@@ -1,0 +1,65 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor White
+    BorderColor Black
+    ArrowColor Black
+}
+
+class ScheduledFlight {
+    - passengers: List<Passenger>
+    - currentPrice: double
+    - departureTime: Date
+    --
+    + addPassengers(List<Passenger>): void
+    + removePassengers(List<Passenger>): void
+    + setCurrentPrice(double): void
+    + cancelFlight(): void
+    + getCapacity(): int
+    + getAvailableCapacity(): int
+}
+
+class FlightOrder {
+    - isClosed: boolean
+    - scheduledFlights: List<ScheduledFlight>
+    - passengers: List<Passenger>
+    - price: double
+    --
+    + setClosed(): void
+    + getScheduledFlights(): List<ScheduledFlight>
+    + setPassengers(List<Passenger>): void
+    + setPrice(double): void
+}
+
+class Customer {
+    - name: String
+    - email: String
+    - orders: List<Order>
+    --
+    + createOrder(List<String>, List<ScheduledFlight>, double): FlightOrder
+}
+
+class Passenger {
+    - name: String
+    --
+    + getName(): String
+}
+
+note bottom of ScheduledFlight
+    No notification mechanism.
+    State changes are silent.
+    Side effects must be
+    hardcoded into methods.
+end note
+
+note bottom of FlightOrder
+    No notification mechanism.
+    Closing an order notifies
+    nobody.
+end note
+
+Customer --> FlightOrder : creates
+FlightOrder --> ScheduledFlight : contains
+FlightOrder --> Passenger : contains
+ScheduledFlight --> Passenger : carries
+@enduml
