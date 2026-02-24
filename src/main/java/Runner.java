@@ -2,6 +2,10 @@ import flight.reservation.Airport;
 import flight.reservation.flight.Schedule;
 import flight.reservation.flight.Flight;
 import flight.reservation.plane.*;
+import flight.reservation.plane.Aircraft;
+import flight.reservation.plane.Helicopter;
+import flight.reservation.plane.PassengerDrone;
+import flight.reservation.plane.PassengerPlane;
 
 import java.util.Arrays;
 import java.util.List;

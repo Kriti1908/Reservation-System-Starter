@@ -1,6 +1,6 @@
 package flight.reservation.plane;
 
-public class PassengerDrone {
+public class PassengerDrone implements Aircraft {
     private final String model;
 
     public PassengerDrone(String model) {
@@ -11,7 +11,18 @@ public class PassengerDrone {
         }
     }
 
+    @Override
     public String getModel() {
         return model;
+    }
+
+    @Override
+    public int getPassengerCapacity() {
+        return 4; // Fixed capacity for passenger drones
+    }
+
+    @Override
+    public int getCrewCapacity() {
+        return 0; // Drones have no crew
     }
 }

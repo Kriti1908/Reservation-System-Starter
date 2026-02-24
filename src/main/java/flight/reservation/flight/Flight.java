@@ -2,6 +2,7 @@ package flight.reservation.flight;
 
 import flight.reservation.Airport;
 import flight.reservation.plane.AircraftAdapter;
+// import flight.reservation.plane.Aircraft;
 
 import java.util.Arrays;
 
@@ -27,8 +28,8 @@ public class Flight {
     }
 
     private boolean isAircraftValid(Airport airport) {
-        String model = aircraft.getModel();
-        return Arrays.stream(airport.getAllowedAircrafts()).anyMatch(x -> x.equals(model));
+        return Arrays.stream(airport.getAllowedAircrafts())
+                .anyMatch(x -> x.equals(aircraft.getModel()));
     }
 
     public AircraftAdapter getAircraft() {
