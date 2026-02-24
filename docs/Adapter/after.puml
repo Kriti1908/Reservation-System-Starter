@@ -1,0 +1,69 @@
+@startuml
+skinparam classAttributeIconSize 0
+title AFTER: Adapter Pattern -> uniform AircraftAdapter interface
+
+package "flight.reservation.plane" {
+  interface AircraftAdapter {
+    +getModel(): String
+    +getPassengerCapacity(): int
+    +getCrewCapacity(): int
+    +getType(): String
+  }
+
+  class PassengerPlane
+  class Helicopter
+  class PassengerDrone
+
+  class PassengerPlaneAdapter {
+    -plane: PassengerPlane
+  }
+
+  class HelicopterAdapter {
+    -helicopter: Helicopter
+  }
+
+  class PassengerDroneAdapter {
+    -drone: PassengerDrone
+  }
+
+  AircraftAdapter <|.. PassengerPlaneAdapter
+  AircraftAdapter <|.. HelicopterAdapter
+  AircraftAdapter <|.. PassengerDroneAdapter
+
+  PassengerPlaneAdapter o-- PassengerPlane : wraps
+  HelicopterAdapter o-- Helicopter : wraps
+  PassengerDroneAdapter o-- PassengerDrone : wraps
+}
+
+package "flight.reservation.flight" {
+  class Flight {
+    #aircraft: AircraftAdapter
+    +Flight(..., aircraft: AircraftAdapter)
+    -isAircraftValid(airport): boolean
+    +getAircraft(): AircraftAdapter
+  }
+
+  class ScheduledFlight {
+    +ScheduledFlight(..., aircraft: AircraftAdapter, departureTime: Date)
+    +getCapacity(): int
+    +getCrewMemberCapacity(): int
+    +getAvailableCapacity(): int
+  }
+
+  Flight <|-- ScheduledFlight
+  Flight --> AircraftAdapter : uses
+}
+
+note right of Flight
+  Validity check now calls:
+  aircraft.getModel()
+  (no instanceof)
+end note
+
+note right of ScheduledFlight
+  Capacity calls now delegate to adapter:
+  - aircraft.getPassengerCapacity()
+  - aircraft.getCrewCapacity()
+  (no instanceof, no hardcoding)
+end note
+@enduml

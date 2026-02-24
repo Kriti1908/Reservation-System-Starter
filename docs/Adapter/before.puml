@@ -1,0 +1,58 @@
+@startuml
+skinparam classAttributeIconSize 0
+title BEFORE: Inconsistent aircraft interfaces -> instanceof checks
+
+package "flight.reservation.plane" {
+  class PassengerPlane {
+    +model: String
+    +passengerCapacity: int
+    +crewCapacity: int
+  }
+
+  class Helicopter {
+    -model: String
+    -passengerCapacity: int
+    +getModel(): String
+    +getPassengerCapacity(): int
+  }
+
+  class PassengerDrone {
+    -model: String
+    +getModel(): String
+    ' capacity not available (was hardcoded outside)
+  }
+}
+
+package "flight.reservation.flight" {
+  class Flight {
+    #aircraft: Object
+    +Flight(..., aircraft: Object)
+    -isAircraftValid(airport): boolean
+    +getAircraft(): Object
+  }
+
+  class ScheduledFlight {
+    +ScheduledFlight(..., aircraft: Object, departureTime: Date)
+    +getCapacity(): int <<throws NoSuchFieldException>>
+    +getCrewMemberCapacity(): int <<throws NoSuchFieldException>>
+    +getAvailableCapacity(): int <<throws NoSuchFieldException>>
+  }
+
+  Flight <|-- ScheduledFlight
+}
+
+Flight ..> PassengerPlane : instanceof
+Flight ..> Helicopter : instanceof
+Flight ..> PassengerDrone : instanceof
+
+ScheduledFlight ..> PassengerPlane : instanceof
+ScheduledFlight ..> Helicopter : instanceof
+ScheduledFlight ..> PassengerDrone : instanceof
+
+note right of ScheduledFlight
+  Capacity & crew capacity required:
+  - instanceof checks
+  - mixed field/getter access
+  - hardcoded drone capacity
+end note
+@enduml
