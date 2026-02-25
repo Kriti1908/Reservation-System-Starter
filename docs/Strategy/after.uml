@@ -1,0 +1,84 @@
+@startuml Strategy_Pattern_After
+
+skinparam classAttributeIconSize 0
+
+title Strategy Pattern - After Implementation
+note "Payment Logic Encapsulated in Strategies" as T2
+
+interface PaymentStrategy {
+    + validate(): boolean
+    + pay(double amount): boolean
+    + getPaymentMethodName(): String
+}
+
+class CreditCardPaymentStrategy {
+    - creditCard: CreditCard
+    + CreditCardPaymentStrategy(CreditCard)
+    + validate(): boolean
+    + pay(double amount): boolean
+    + getPaymentMethodName(): String
+}
+
+class PayPalPaymentStrategy {
+    - email: String
+    - password: String
+    + PayPalPaymentStrategy(String, String)
+    + validate(): boolean
+    + pay(double amount): boolean
+    + getPaymentMethodName(): String
+}
+
+class ApplePayPaymentStrategy {
+    - applePayToken: String
+    + ApplePayPaymentStrategy(String)
+    + validate(): boolean
+    + pay(double amount): boolean
+    + getPaymentMethodName(): String
+}
+
+class FlightOrder {
+    - flights: List<ScheduledFlight>
+    - noFlyList: static List<String>
+    - paymentStrategy: PaymentStrategy
+    + setPaymentStrategy(PaymentStrategy): void
+    + processPayment(): boolean
+    {method} @Deprecated + processOrderWithCreditCard(CreditCard): boolean
+    {method} @Deprecated + processOrderWithPayPal(String, String): boolean
+}
+
+class CreditCard
+class Paypal
+class Order
+
+PaymentStrategy <|.. CreditCardPaymentStrategy
+PaymentStrategy <|.. PayPalPaymentStrategy
+PaymentStrategy <|.. ApplePayPaymentStrategy
+
+FlightOrder o--> PaymentStrategy
+FlightOrder --|> Order
+
+CreditCardPaymentStrategy ..> CreditCard
+PayPalPaymentStrategy ..> Paypal
+
+note right of PaymentStrategy
+PaymentStrategy defines the interface for different
+payment methods.
+end note
+
+note left of CreditCardPaymentStrategy
+Encapsulates credit card processing logic.
+end note
+
+note left of PayPalPaymentStrategy
+Encapsulates PayPal processing logic.
+end note
+
+note left of ApplePayPaymentStrategy
+Example of future extensible payment strategy.
+end note
+
+note bottom of FlightOrder
+FlightOrder delegates payment to a selected strategy.
+end note
+
+@enduml

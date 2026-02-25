@@ -1,0 +1,86 @@
+@startuml Strategy_Pattern_Before
+
+skinparam classAttributeIconSize 0
+
+title Strategy Pattern - Before Implementation
+note "Payment Logic Hardcoded in FlightOrder" as T1
+
+class FlightOrder <<extends Order>> {
+    - flights: List<ScheduledFlight>
+    - noFlyList: static List<String>
+    ==== Payment Methods (Hardcoded) ====
+    + processOrderWithCreditCardDetail(String, Date, String): boolean
+    + processOrderWithCreditCard(CreditCard): boolean
+    + processOrderWithPayPal(String, String): boolean
+    ====
+    - payWithCreditCard(CreditCard, double): boolean
+    - payWithPayPal(String, String, double): boolean
+    - cardIsPresentAndValid(CreditCard): boolean
+    + getScheduledFlights(): List<ScheduledFlight>
+    - isOrderValid(...): boolean
+}
+
+class CreditCard {
+    - amount: double
+    - number: String
+    - date: Date
+    - cvv: String
+    - valid: boolean
+    + CreditCard(String, Date, String)
+    + setAmount(double): void
+    + getAmount(): double
+    + isValid(): boolean
+    + setValid(): void
+}
+
+class Paypal {
+    + {static} DATA_BASE: Map<String, String>
+}
+
+class Order {
+    - id: UUID
+    - price: double
+    - isClosed: boolean
+    - customer: Customer
+    - passengers: List<Passenger>
+    + getId(): UUID
+    + getPrice(): double
+    + setPrice(double): void
+    + isClosed(): boolean
+    + setClosed(): void
+}
+
+FlightOrder --|> Order
+FlightOrder ..> CreditCard
+FlightOrder ..> Paypal
+
+note right of FlightOrder
+  **PROBLEMS:**
+  • Multiple hardcoded payment methods
+  • Duplicate validation and processing logic  
+  • Mixed concerns (order + payment)
+  • Difficult to extend
+end note
+
+note bottom of CreditCard
+  Used directly by FlightOrder
+  No abstraction
+end note
+
+note bottom of Paypal
+  Static database usage
+  No abstraction
+end note
+
+note as ExampleCode
+  Example of hardcoded logic:
+  • processOrderWithCreditCard()
+  • processOrderWithPayPal()
+  • payWithCreditCard()
+  • payWithPayPal()
+  • cardIsPresentAndValid()
+end note
+
+ExampleCode .. FlightOrder
+
+@enduml

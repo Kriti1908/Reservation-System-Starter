@@ -3,6 +3,9 @@ package flight.reservation.order;
 import flight.reservation.Customer;
 import flight.reservation.flight.ScheduledFlight;
 import flight.reservation.payment.CreditCard;
+import flight.reservation.payment.CreditCardPaymentStrategy;
+import flight.reservation.payment.PayPalPaymentStrategy;
+import flight.reservation.payment.PaymentStrategy;
 import flight.reservation.payment.Paypal;
 
 import java.util.Arrays;
@@ -12,6 +15,7 @@ import java.util.List;
 public class FlightOrder extends Order {
     private final List<ScheduledFlight> flights;
     static List<String> noFlyList = Arrays.asList("Peter", "Johannes");
+    private PaymentStrategy paymentStrategy;
 
     public FlightOrder(List<ScheduledFlight> flights) {
         this.flights = flights;
@@ -25,6 +29,78 @@ public class FlightOrder extends Order {
         return flights;
     }
 
+    /**
+     * Sets the payment strategy for this order.
+     * 
+     * @param paymentStrategy The payment strategy to use
+     */
+    public void setPaymentStrategy(PaymentStrategy paymentStrategy) {
+        this.paymentStrategy = paymentStrategy;
+    }
+
+    /**
+     * Processes the payment using the configured payment strategy.
+     * 
+     * @return true if payment is successful
+     * @throws IllegalStateException if order is already closed, no payment strategy is set, or payment fails
+     */
+    public boolean processPayment() throws IllegalStateException {
+        if (isClosed()) {
+            // Payment is already proceeded
+            return true;
+        }
+        
+        if (paymentStrategy == null) {
+            throw new IllegalStateException("No payment strategy has been set.");
+        }
+        
+        if (!paymentStrategy.validate()) {
+            throw new IllegalStateException("Payment information is not valid.");
+        }
+        
+        boolean isPaid = paymentStrategy.pay(this.getPrice());
+        if (isPaid) {
+            this.setClosed();
+        }
+        return isPaid;
+    }
+
+    /**
+     * Convenience method for processing order with credit card details.
+     * Creates a CreditCardPaymentStrategy and processes payment.
+     * 
+     * @deprecated Use setPaymentStrategy() followed by processPayment() instead
+     */
+    @Deprecated
+    public boolean processOrderWithCreditCardDetail(String number, Date expirationDate, String cvv) throws IllegalStateException {
+        CreditCard creditCard = new CreditCard(number, expirationDate, cvv);
+        return processOrderWithCreditCard(creditCard);
+    }
+
+    /**
+     * Convenience method for processing order with credit card.
+     * Creates a CreditCardPaymentStrategy and processes payment.
+     * 
+     * @deprecated Use setPaymentStrategy() followed by processPayment() instead
+     */
+    @Deprecated
+    public boolean processOrderWithCreditCard(CreditCard creditCard) throws IllegalStateException {
+        setPaymentStrategy(new CreditCardPaymentStrategy(creditCard));
+        return processPayment();
+    }
+
+    /**
+     * Convenience method for processing order with PayPal.
+     * Creates a PayPalPaymentStrategy and processes payment.
+     * 
+     * @deprecated Use setPaymentStrategy() followed by processPayment() instead
+     */
+    @Deprecated
+    public boolean processOrderWithPayPal(String email, String password) throws IllegalStateException {
+        setPaymentStrategy(new PayPalPaymentStrategy(email, password));
+        return processPayment();
+    }
+
     private boolean isOrderValid(Customer customer, List<String> passengerNames, List<ScheduledFlight> flights) {
         boolean valid = true;
         valid = valid && !noFlyList.contains(customer.getName());
@@ -33,70 +109,5 @@ public class FlightOrder extends Order {
             scheduledFlight.getAvailableCapacity() >= passengerNames.size()
         );
         return valid;
-    }
-
-    public boolean processOrderWithCreditCardDetail(String number, Date expirationDate, String cvv) throws IllegalStateException {
-        CreditCard creditCard = new CreditCard(number, expirationDate, cvv);
-        return processOrderWithCreditCard(creditCard);
-    }
-
-    public boolean processOrderWithCreditCard(CreditCard creditCard) throws IllegalStateException {
-        if (isClosed()) {
-            // Payment is already proceeded
-            return true;
-        }
-        // validate payment information
-        if (!cardIsPresentAndValid(creditCard)) {
-            throw new IllegalStateException("Payment information is not set or not valid.");
-        }
-        boolean isPaid = payWithCreditCard(creditCard, this.getPrice());
-        if (isPaid) {
-            this.setClosed();
-        }
-        return isPaid;
-    }
-
-    private boolean cardIsPresentAndValid(CreditCard card) {
-        return card != null && card.isValid();
-    }
-
-    public boolean processOrderWithPayPal(String email, String password) throws IllegalStateException {
-        if (isClosed()) {
-            // Payment is already proceeded
-            return true;
-        }
-        // validate payment information
-        if (email == null || password == null || !email.equals(Paypal.DATA_BASE.get(password))) {
-            throw new IllegalStateException("Payment information is not set or not valid.");
-        }
-        boolean isPaid = payWithPayPal(email, password, this.getPrice());
-        if (isPaid) {
-            this.setClosed();
-        }
-        return isPaid;
-    }
-
-    public boolean payWithCreditCard(CreditCard card, double amount) throws IllegalStateException {
-        if (cardIsPresentAndValid(card)) {
-            System.out.println("Paying " + getPrice() + " using Credit Card.");
-            double remainingAmount = card.getAmount() - getPrice();
-            if (remainingAmount < 0) {
-                System.out.printf("Card limit reached - Balance: %f%n", remainingAmount);
-                throw new IllegalStateException("Card limit reached");
-            }
-            card.setAmount(remainingAmount);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public boolean payWithPayPal(String email, String password, double amount) throws IllegalStateException {
-        if (email.equals(Paypal.DATA_BASE.get(password))) {
-            System.out.println("Paying " + getPrice() + " using PayPal.");
-            return true;
-        } else {
-            return false;
-        }
     }
 }
