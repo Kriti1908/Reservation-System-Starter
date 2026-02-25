@@ -1,0 +1,33 @@
+@startuml
+title Chain of Responsibility - BEFORE
+
+class FlightOrder {
+    - flights: List<ScheduledFlight>
+    + processOrderWithCreditCard(CreditCard): boolean
+    + processOrderWithPayPal(String, String): boolean
+    - cardIsPresentAndValid(CreditCard): boolean
+    - payWithCreditCard(CreditCard, double): boolean
+    - payWithPayPal(String, String, double): boolean
+    - isOrderValid(...): boolean
+}
+
+class CreditCard {
+    - number: String
+    - expiryDate: Date
+    - cvv: String
+}
+
+class Paypal {
+    + DATA_BASE: static Map<String, String>
+}
+
+FlightOrder ..> CreditCard : uses
+FlightOrder ..> Paypal : uses
+
+note bottom of FlightOrder
+  All processing steps hardcoded:
+  validation -> payment -> closure
+  Not extensible or reorderable
+end note
+
+@enduml

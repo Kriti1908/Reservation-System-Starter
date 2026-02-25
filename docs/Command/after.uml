@@ -1,0 +1,82 @@
+@startuml
+title Chain of Responsibility - AFTER
+
+abstract class OrderProcessingHandler {
+    # nextHandler: OrderProcessingHandler
+    # order: FlightOrder
+    + setNextHandler(handler: OrderProcessingHandler): void
+    + handle(context: OrderContext): boolean
+    # {abstract} doHandle(context: OrderContext): boolean
+}
+
+class ValidationHandler {
+    + doHandle(context: OrderContext): boolean
+}
+
+class PaymentHandler {
+    - paymentStrategy: PaymentStrategy
+    + doHandle(context: OrderContext): boolean
+}
+
+class ClosureHandler {
+    + doHandle(context: OrderContext): boolean
+}
+
+class ConfirmationHandler {
+    + doHandle(context: OrderContext): boolean
+}
+
+class OrderContext {
+    - order: FlightOrder
+    - paymentStrategy: PaymentStrategy
+    - success: boolean
+    + getOrder(): FlightOrder
+    + getPaymentStrategy(): PaymentStrategy
+    + isSuccess(): boolean
+    + setSuccess(success: boolean): void
+}
+
+class FlightOrder {
+    - flights: List<ScheduledFlight>
+    - paymentStrategy: PaymentStrategy
+    - chainHead: OrderProcessingHandler
+    + setPaymentStrategy(strategy: PaymentStrategy): void
+    + buildChain(): void
+    + processPayment(): boolean
+}
+
+interface PaymentStrategy {
+    + validatePayment(): boolean
+    + pay(amount: double): boolean
+}
+
+OrderProcessingHandler <|-- ValidationHandler
+OrderProcessingHandler <|-- PaymentHandler
+OrderProcessingHandler <|-- ClosureHandler
+OrderProcessingHandler <|-- ConfirmationHandler
+
+OrderProcessingHandler o--> OrderProcessingHandler : nextHandler
+
+FlightOrder --> OrderProcessingHandler : chainHead
+FlightOrder --> PaymentStrategy : paymentStrategy
+
+PaymentHandler --> PaymentStrategy : uses
+ValidationHandler ..> OrderContext : reads
+PaymentHandler ..> OrderContext : reads
+ClosureHandler ..> OrderContext : reads
+ConfirmationHandler ..> OrderContext : reads
+
+note right of FlightOrder
+  buildChain() wires:
+  ValidationHandler
+    -> PaymentHandler
+      -> ClosureHandler
+        -> ConfirmationHandler
+end note
+
+note right of OrderProcessingHandler
+  handle() calls doHandle(),
+  then delegates to nextHandler
+  if not null and still passing
+end note
+@enduml
