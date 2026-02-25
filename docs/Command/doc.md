@@ -1,38 +1,43 @@
-# Chain of Responsibility Pattern in Command Module
+# Chain of Responsibility Pattern in Order Processing
 
 ## Overview
-This implementation introduces the Chain of Responsibility pattern for processing flight orders. The chain consists of several handlers, each responsible for a specific step in the order processing pipeline. The chain is built and executed in the `ChainFlightOrder` class.
+This implementation introduces a Chain of Responsibility for the payment-processing phase of a `FlightOrder`.
+The chain is assembled in `ChainFlightOrder` and executes handlers in sequence.
 
 ## Class Structure
+- `OrderProcessingHandler` (abstract): Defines `handle(context)` and `doHandle(context)`, and forwards to the next handler.
+- `ValidationHandler`: Validates context, order state, payment strategy presence, and `PaymentStrategy.validate()`.
+- `PaymentHandler`: Executes `PaymentStrategy.pay(order.getPrice())` and stores the result in the context.
+- `ClosureHandler`: Closes the order when payment succeeds.
+- `ConfirmationHandler`: Runs confirmation/post-processing after success.
+- `OrderContext`: Carries `FlightOrder`, `PaymentStrategy`, and success state through the chain.
+- `ChainFlightOrder`: Extends `FlightOrder`, wires the chain, and exposes `processOrderWithChain(PaymentStrategy)`.
 
-- **OrderProcessingHandler (abstract)**: Base class for all handlers. Each handler implements `doHandle(context)` and delegates to the next handler if successful.
-- **ValidationHandler**: Validates the order context (e.g., checks if the order is not null).
-- **PaymentHandler**: Handles payment using the provided `PaymentStrategy`.
-- **ClosureHandler**: (Optional) Marks the order as closed or performs closure logic.
-- **ConfirmationHandler**: (Optional) Sends confirmation or performs post-processing.
-- **OrderContext**: Holds the order and payment strategy, and tracks success state.
-- **ChainFlightOrder**: Extends `FlightOrder` and wires up the handler chain. Provides `processOrderWithChain()` to process the order using the chain.
+## Handler Flow
+1. Build chain in `ChainFlightOrder`: `ValidationHandler -> PaymentHandler -> ClosureHandler -> ConfirmationHandler`.
+2. Call `processOrderWithChain(paymentStrategy)`.
+3. Create `OrderContext` and pass it to `chainHead.handle(context)`.
+4. Each handler decides whether to continue by returning `true` or stop by returning `false`.
 
-## How It Works
-1. **Build the Chain**: `ChainFlightOrder.buildChain()` wires up the handlers in order: Validation → Payment → Closure → Confirmation.
-2. **Process the Order**: `processOrderWithChain()` creates an `OrderContext` and passes it through the chain. Each handler processes its step and passes to the next if successful.
-3. **Extensibility**: New handlers can be added easily by extending `OrderProcessingHandler` and updating the chain wiring.
+## Behavior Notes
+- If the order is already closed, validation marks success and stops the chain.
+- If payment strategy is missing or invalid, an `IllegalStateException` is thrown.
+- `PaymentStrategy` in this codebase uses `validate()` (not `validatePayment()`).
 
 ## Example Usage
 ```java
 ChainFlightOrder order = new ChainFlightOrder(flights);
-order.setPaymentStrategy(new CreditCardPaymentStrategy(creditCard));
-boolean success = order.processOrderWithChain(order.getPaymentStrategy());
+boolean success = order.processOrderWithChain(new CreditCardPaymentStrategy(creditCard));
 ```
 
-## Files Added
-- `order/handler/OrderProcessingHandler.java`
-- `order/handler/ValidationHandler.java`
-- `order/handler/PaymentHandler.java`
-- `order/handler/ClosureHandler.java`
-- `order/handler/ConfirmationHandler.java`
-- `order/OrderContext.java`
-- `order/ChainFlightOrder.java`
+## Implemented Files
+- `src/main/java/flight/reservation/order/handler/OrderProcessingHandler.java`
+- `src/main/java/flight/reservation/order/handler/ValidationHandler.java`
+- `src/main/java/flight/reservation/order/handler/PaymentHandler.java`
+- `src/main/java/flight/reservation/order/handler/ClosureHandler.java`
+- `src/main/java/flight/reservation/order/handler/ConfirmationHandler.java`
+- `src/main/java/flight/reservation/order/OrderContext.java`
+- `src/main/java/flight/reservation/order/ChainFlightOrder.java`
 
-## References
-See `docs/Command/after.uml` for the UML diagram of the chain.
+## Reference
+See `docs/Command/after.uml`.

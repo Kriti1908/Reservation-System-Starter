@@ -3,7 +3,6 @@ title Chain of Responsibility - AFTER
 
 abstract class OrderProcessingHandler {
     # nextHandler: OrderProcessingHandler
-    # order: FlightOrder
     + setNextHandler(handler: OrderProcessingHandler): void
     + handle(context: OrderContext): boolean
     # {abstract} doHandle(context: OrderContext): boolean
@@ -36,17 +35,15 @@ class OrderContext {
     + setSuccess(success: boolean): void
 }
 
-class FlightOrder {
+class ChainFlightOrder {
     - flights: List<ScheduledFlight>
-    - paymentStrategy: PaymentStrategy
     - chainHead: OrderProcessingHandler
-    + setPaymentStrategy(strategy: PaymentStrategy): void
     + buildChain(): void
-    + processPayment(): boolean
+    + processOrderWithChain(strategy: PaymentStrategy): boolean
 }
 
 interface PaymentStrategy {
-    + validatePayment(): boolean
+    + validate(): boolean
     + pay(amount: double): boolean
 }
 
@@ -57,8 +54,9 @@ OrderProcessingHandler <|-- ConfirmationHandler
 
 OrderProcessingHandler o--> OrderProcessingHandler : nextHandler
 
-FlightOrder --> OrderProcessingHandler : chainHead
-FlightOrder --> PaymentStrategy : paymentStrategy
+ChainFlightOrder --> OrderProcessingHandler : chainHead
+ChainFlightOrder --|> FlightOrder
+ChainFlightOrder ..> PaymentStrategy : uses
 
 PaymentHandler --> PaymentStrategy : uses
 ValidationHandler ..> OrderContext : reads
@@ -66,7 +64,7 @@ PaymentHandler ..> OrderContext : reads
 ClosureHandler ..> OrderContext : reads
 ConfirmationHandler ..> OrderContext : reads
 
-note right of FlightOrder
+note right of ChainFlightOrder
   buildChain() wires:
   ValidationHandler
     -> PaymentHandler
