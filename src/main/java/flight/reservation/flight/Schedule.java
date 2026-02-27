@@ -18,13 +18,13 @@ public class Schedule {
     }
 
     public void scheduleFlight(Flight flight, Date date) {
-        ScheduledFlight scheduledFlight = new ScheduledFlight(
-            flight.getNumber(), 
-            flight.getDeparture(), 
-            flight.getArrival(), 
-            flight.getAircraft(), 
-            date
-        );
+        ScheduledFlight scheduledFlight = new ScheduledFlight.Builder()
+            .withNumber(flight.getNumber())
+            .withDeparture(flight.getDeparture())
+            .withArrival(flight.getArrival())
+            .withAircraft(flight.getAircraft())
+            .withDepartureTime(date)
+            .build();
         scheduledFlights.add(scheduledFlight);
     }
 

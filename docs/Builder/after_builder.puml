@@ -1,0 +1,171 @@
+@startuml ScheduledFlight_After_Builder_Pattern
+!theme plain
+' skinparam backgroundColor #FEFEFE
+' skinparam class {
+'     BackgroundColor #C8E6C9
+'     BorderColor #1B5E20
+'     ArrowColor #1B5E20
+'     FontColor #000000
+' }
+' skinparam note {
+'     BackgroundColor #A5D6A7
+'     BorderColor #00600D
+' }
+
+title ScheduledFlight Class - AFTER Builder Pattern Refactoring
+
+package "flight.reservation.flight" {
+    abstract class Flight {
+        -number: int
+        -departure: Airport
+        -arrival: Airport
+        #aircraft: AircraftAdapter
+        __
+        +Flight(int, Airport, Airport, AircraftAdapter)
+        -checkValidity(): void
+        -isAircraftValid(Airport): boolean
+        +getAircraft(): AircraftAdapter
+        +getNumber(): int
+        +getDeparture(): Airport
+        +getArrival(): Airport
+        +toString(): String
+    }
+
+    class ScheduledFlight {
+        -passengers: List<Passenger>
+        -observers: List<FlightObserver>
+        -departureTime: Date
+        -currentPrice: double = 100
+        __
+        {{private}} ScheduledFlight(Builder builder)
+        __
+        +addObserver(FlightObserver): void
+        +removeObserver(FlightObserver): void
+        +getCrewMemberCapacity(): int
+        +getCapacity(): int
+        +getAvailableCapacity(): int
+        +addPassengers(List<Passenger>): void
+        +removePassengers(List<Passenger>): void
+        +setCurrentPrice(double): void
+        +cancelFlight(): void
+        +getDepartureTime(): Date
+        +getPassengers(): List<Passenger>
+        +getCurrentPrice(): double
+        -notifyPassengersAdded(int): void
+        -notifyPassengersRemoved(int): void
+        -notifyPriceChanged(double, double): void
+        -notifyFlightCancelled(): void
+    }
+
+    class "ScheduledFlight.Builder" as Builder {
+        {{private}} number: int
+        {{private}} departure: Airport
+        {{private}} arrival: Airport
+        {{private}} aircraft: AircraftAdapter
+        {{private}} departureTime: Date
+        {{private}} passengers: List<Passenger>
+        {{private}} currentPrice: double = 100.0
+        __
+        +withNumber(int): Builder
+        +withDeparture(Airport): Builder
+        +withArrival(Airport): Builder
+        +withAircraft(AircraftAdapter): Builder
+        +withDepartureTime(Date): Builder
+        +withPassengers(List<Passenger>): Builder
+        +withCurrentPrice(double): Builder
+        +build(): ScheduledFlight
+        {{private}} validate(): void
+    }
+
+    Flight <|-- ScheduledFlight
+
+    interface FlightObserver {
+        +onPassengersAdded(ScheduledFlight, int): void
+        +onPassengersRemoved(ScheduledFlight, int): void
+        +onPriceChanged(ScheduledFlight, double, double): void
+        +onFlightCancelled(ScheduledFlight): void
+    }
+
+    ScheduledFlight o-- FlightObserver
+    ScheduledFlight +-- Builder
+    Builder ..> ScheduledFlight : creates via private constructor
+}
+
+package "flight.reservation" {
+    class Airport {
+        -name: String
+        -code: String
+        -location: String
+        -allowedAircrafts: String[]
+    }
+
+    class Passenger {
+        -name: String
+        __
+        +Passenger(String)
+        +getName(): String
+    }
+}
+
+package "flight.reservation.plane" {
+    interface AircraftAdapter {
+        +getModel(): String
+        +getPassengerCapacity(): int
+        +getCrewCapacity(): int
+        +getType(): String
+    }
+}
+
+ScheduledFlight --> Airport
+ScheduledFlight --> Passenger
+Flight --> AircraftAdapter
+
+note right of Builder
+    BUILDER PATTERN BENEFITS:
+    
+    Single Builder class for all configurations
+       - No constructor overloading needed
+       - Clear single way to create instances
+    
+    Fluent interface with method chaining
+       - withNumber().withDeparture()...build()
+       - Readable and self-documenting
+    
+    Validation in build() method
+       - All validation in one place
+       - Guaranteed valid objects
+    
+    Easy to extend
+       - Adding optional parameter = 1 method
+       - No need for new constructors
+    
+    Clear initialization sequence
+       - Methods clearly show intent
+       - Required fields are obvious
+    
+    Controlled object creation
+       - Private constructor prevents misuse
+       - Only valid objects can be created
+end note
+
+note left of ScheduledFlight
+    Private constructor:
+    - Only accessible via Builder
+    - Prevents direct instantiation
+    - Ensures validation
+end note
+
+note bottom of Builder
+    REQUIRED FIELDS (must be set before build()):
+    • number - Flight number
+    • departure - Departure airport
+    • arrival - Arrival airport
+    • aircraft - Aircraft adapter
+    • departureTime - Date and time
+    
+    OPTIONAL FIELDS (have defaults):
+    • passengers - Empty list if not set
+    • currentPrice - 100.0 if not set
+end note
+
+@enduml

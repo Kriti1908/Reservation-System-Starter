@@ -1,0 +1,138 @@
+@startuml ScheduledFlight_Before_Builder_Pattern
+!theme plain
+' skinparam backgroundColor #FEFEFE
+' skinparam class {
+'     BackgroundColor #FFE0B2
+'     BorderColor #E65100
+'     ArrowColor #E65100
+'     FontColor #000000
+' }
+' skinparam note {
+'     BackgroundColor #FFCCBC
+'     BorderColor #D84315
+' }
+
+title ScheduledFlight Class - BEFORE Builder Pattern Refactoring
+
+package "flight.reservation.flight" {
+    abstract class Flight {
+        -number: int
+        -departure: Airport
+        -arrival: Airport
+        #aircraft: AircraftAdapter
+        __
+        +Flight(int, Airport, Airport, AircraftAdapter)
+        -checkValidity(): void
+        -isAircraftValid(Airport): boolean
+        +getAircraft(): AircraftAdapter
+        +getNumber(): int
+        +getDeparture(): Airport
+        +getArrival(): Airport
+        +toString(): String
+    }
+
+    class ScheduledFlight {
+        -passengers: List<Passenger>
+        -observers: List<FlightObserver>
+        -departureTime: Date
+        -currentPrice: double = 100
+        __
+        +ScheduledFlight(int, Airport, Airport, AircraftAdapter, Date)
+        +ScheduledFlight(int, Airport, Airport, AircraftAdapter, Date, double)
+        __
+        +addObserver(FlightObserver): void
+        +removeObserver(FlightObserver): void
+        +getCrewMemberCapacity(): int
+        +getCapacity(): int
+        +getAvailableCapacity(): int
+        +addPassengers(List<Passenger>): void
+        +removePassengers(List<Passenger>): void
+        +setCurrentPrice(double): void
+        +cancelFlight(): void
+        +getDepartureTime(): Date
+        +getPassengers(): List<Passenger>
+        +getCurrentPrice(): double
+        -notifyPassengersAdded(int): void
+        -notifyPassengersRemoved(int): void
+        -notifyPriceChanged(double, double): void
+        -notifyFlightCancelled(): void
+    }
+
+    Flight <|-- ScheduledFlight
+
+    interface FlightObserver {
+        +onPassengersAdded(ScheduledFlight, int): void
+        +onPassengersRemoved(ScheduledFlight, int): void
+        +onPriceChanged(ScheduledFlight, double, double): void
+        +onFlightCancelled(ScheduledFlight): void
+    }
+
+    ScheduledFlight o-- FlightObserver
+}
+
+package "flight.reservation" {
+    class Airport {
+        -name: String
+        -code: String
+        -location: String
+        -allowedAircrafts: String[]
+    }
+
+    class Passenger {
+        -name: String
+        __
+        +Passenger(String)
+        +getName(): String
+    }
+}
+
+package "flight.reservation.plane" {
+    interface AircraftAdapter {
+        +getModel(): String
+        +getPassengerCapacity(): int
+        +getCrewCapacity(): int
+        +getType(): String
+    }
+}
+
+ScheduledFlight --> Airport
+ScheduledFlight --> Passenger
+Flight --> AircraftAdapter
+
+note right of ScheduledFlight
+    CURRENT PROBLEMS:
+    
+    Multiple constructor overloads
+       - Constructor 1: Basic parameters
+       - Constructor 2: With price
+       - Hard to understand which to use
+    
+    Optional fields set AFTER construction
+       - currentPrice set separately
+       - Inconsistent object state
+    
+    No validation during creation
+       - Invalid objects can be created
+       - Validation scattered elsewhere
+    
+    Hard to extend
+       - Adding new optional parameter
+         requires new constructor
+       - Violates Open/Closed Principle
+    
+    Unclear initialization sequence
+       - No fluent interface
+       - Multiple setter calls needed
+    
+    Object mutability issues
+       - Setters can be called after creation
+       - State changes are uncontrolled
+end note
+
+note left of Flight
+    Parent class validates
+    aircraft compatibility
+    with airports in constructor
+end note
+
+@enduml
