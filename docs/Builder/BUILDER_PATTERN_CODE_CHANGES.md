@@ -12,7 +12,6 @@ This document provides all the code changes needed to implement the Builder Patt
 |------|----------|------------|--------|
 | **ScheduledFlight.java** | `src/main/java/flight/reservation/flight/ScheduledFlight.java` | **MAJOR** | Replace public constructors with private constructor and add nested Builder class |
 | **Schedule.java** | `src/main/java/flight/reservation/flight/Schedule.java` | MINOR | Update `scheduleFlight()` method to use builder |
-| Test files | `src/test/java/flight/reservation/*.java` | MINOR | Update test code that creates ScheduledFlight instances |
 
 ---
 
