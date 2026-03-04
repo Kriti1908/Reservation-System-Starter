@@ -1,0 +1,21 @@
+Project Name,Package Name,Type Name,Method Name,Code Smell
+reservation,flight.reservation.order,FlightOrder,processOrderWithPayPal,Complex Conditional
+reservation,flight.reservation.payment,CreditCard,CreditCard,Magic Number
+reservation,flight.reservation.flight,Schedule,scheduleFlight,Long Statement
+reservation,flight.reservation.flight,Schedule,removeFlight,Complex Conditional
+reservation,flight.reservation.flight,Schedule,removeFlight,Long Statement
+reservation,flight.reservation.flight,ScheduledFlight,ScheduledFlight,Long Parameter List
+reservation,flight.reservation.flight,ScheduledFlight,ScheduledFlight,Long Parameter List
+reservation,flight.reservation.flight,ScheduledFlight,getCrewMemberCapacity,Magic Number
+reservation,flight.reservation.flight,ScheduledFlight,getCapacity,Magic Number
+reservation,flight.reservation.plane,PassengerPlane,PassengerPlane,Magic Number
+reservation,flight.reservation.plane,PassengerPlane,PassengerPlane,Magic Number
+reservation,flight.reservation.plane,PassengerPlane,PassengerPlane,Magic Number
+reservation,flight.reservation.plane,PassengerPlane,PassengerPlane,Magic Number
+reservation,flight.reservation.plane,PassengerPlane,PassengerPlane,Magic Number
+reservation,flight.reservation.plane,PassengerPlane,PassengerPlane,Magic Number
+reservation,flight.reservation.plane,PassengerPlane,PassengerPlane,Magic Number
+reservation,flight.reservation.plane,PassengerPlane,PassengerPlane,Magic Number
+reservation,flight.reservation.plane,PassengerPlane,PassengerPlane,Missing default
+reservation,flight.reservation.plane,Helicopter,Helicopter,Magic Number
+reservation,flight.reservation.plane,Helicopter,Helicopter,Magic Number

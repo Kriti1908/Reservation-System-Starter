@@ -1,0 +1,15 @@
+Project Name,Package Name,Type Name,Code Smell
+reservation,flight.reservation.order,Order,Unutilized Abstraction
+reservation,flight.reservation.order,FlightOrder,Unutilized Abstraction
+reservation,flight.reservation.order,FlightOrder,Broken Hierarchy
+reservation,flight.reservation.order,FlightOrder,Cyclic-Dependent Modularization
+reservation,flight.reservation,Passenger,Unutilized Abstraction
+reservation,flight.reservation,Customer,Cyclic-Dependent Modularization
+reservation,flight.reservation.payment,Paypal,Unnecessary Abstraction
+reservation,flight.reservation.payment,Paypal,Deficient Encapsulation
+reservation,flight.reservation.flight,Schedule,Unutilized Abstraction
+reservation,flight.reservation.flight,ScheduledFlight,Broken Hierarchy
+reservation,flight.reservation.plane,PassengerDrone,Unutilized Abstraction
+reservation,flight.reservation.plane,PassengerPlane,Unutilized Abstraction
+reservation,flight.reservation.plane,PassengerPlane,Deficient Encapsulation
+reservation,flight.reservation.plane,Helicopter,Unutilized Abstraction
