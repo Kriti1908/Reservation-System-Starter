@@ -1,6 +1,7 @@
 package flight.reservation.order;
 
 import flight.reservation.Customer;
+import flight.reservation.Passenger;
 import flight.reservation.flight.ScheduledFlight;
 import flight.reservation.payment.CreditCard;
 import flight.reservation.payment.CreditCardPaymentStrategy;
@@ -8,6 +9,7 @@ import flight.reservation.payment.PayPalPaymentStrategy;
 import flight.reservation.payment.PaymentStrategy;
 import flight.reservation.payment.Paypal;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -16,6 +18,7 @@ public class FlightOrder extends Order {
     private final List<ScheduledFlight> flights;
     static List<String> noFlyList = Arrays.asList("Peter", "Johannes");
     private PaymentStrategy paymentStrategy;
+    private final List<OrderObserver> observers = new ArrayList<>();
 
     public FlightOrder(List<ScheduledFlight> flights) {
         this.flights = flights;
@@ -27,6 +30,53 @@ public class FlightOrder extends Order {
 
     public List<ScheduledFlight> getScheduledFlights() {
         return flights;
+    }
+
+    // Observer management
+
+    public void addObserver(OrderObserver observer) {
+        observers.add(observer);
+    }
+
+    public void removeObserver(OrderObserver observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void setClosed() {
+        super.setClosed();
+        notifyOrderClosed();
+    }
+
+    @Override
+    public void setPrice(double price) {
+        double oldPrice = getPrice();
+        super.setPrice(price);
+        notifyPriceChanged(oldPrice, price);
+    }
+
+    @Override
+    public void setPassengers(List<Passenger> passengers) {
+        super.setPassengers(passengers);
+        notifyPassengersChanged(passengers);
+    }
+
+    private void notifyOrderClosed() {
+        for (OrderObserver observer : observers) {
+            observer.onOrderClosed(this);
+        }
+    }
+
+    private void notifyPriceChanged(double oldPrice, double newPrice) {
+        for (OrderObserver observer : observers) {
+            observer.onOrderPriceChanged(this, oldPrice, newPrice);
+        }
+    }
+
+    private void notifyPassengersChanged(List<Passenger> passengers) {
+        for (OrderObserver observer : observers) {
+            observer.onPassengersChanged(this, passengers);
+        }
     }
 
     /**
